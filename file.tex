@@ -1,0 +1,204 @@
+\documentclass{article}
+\usepackage{amsmath}
+\title{Linear Algebra - Application in Population Biology}
+\date{2018-03-03}
+\author{Daniel Yu}
+\usepackage{fontspec}
+\setmainfont{Comic Sans MS}
+
+\usepackage{tgbonum}
+
+\begin{document}
+
+\pagenumbering{gobble}
+\maketitle
+\newpage
+\pagenumbering{arabic}
+
+\section{Introduction}
+\paragraph{}
+Population Biology is a branch of Ecology which deals with how populations of organisms change over time. A population is defined as a group of organisms of the same species, which live together in the same time and place.
+
+\subsection{Definitions and Assumptions}
+\paragraph{}
+Here we assume that there is always a 1:1 ratio of males to females in a population, since this is almost always true, and removes unnecessary complications. We also focus mainly on the females in the population, because they are the ones who produce offspring.
+
+\paragraph{}
+A \textit{cohort} is defined as an age range. We will treat these cohorts each as one group of identical individuals, and can choose the ranges themselves based off the species in question. We also number these off from 1 to w, where w is the maximum lifespan of the species. Note that the intervals for these cohorts must all be the same, since we also measure time passing in these intervals, and do not want to complicate things. In this paper we will refer to "age" and "cohort" interchangeably.
+
+\subsection{Notation}
+In this paper we will use certain notation, described below. \\
+
+\noindent
+$ n_{i}(t) $ denotes the female count of cohort \textit{i}, at time \textit{t}. \\
+$ p_i $ is the probability that a female in cohort \textit{i} will live another time interval. \\
+$ m_i $ is the average number of females produced by any female in cohort \textit{i} \\
+$ l_i $ is the probability that a female will survive to age i \\
+$ f_i $ is the probability that an organism born to a mother in cohort \textit{i} will survive through age 1 \\
+
+The last term is referred to as the fertility rate.
+
+\section{Predicting Populations}
+\paragraph{}
+We would like to be able to predict what a population would look like some time in the future. The simplest way to do this would be to say, on average, each female produces \textit{x} offspring a year, and then we can look into the future using exponentiation. However, this method does breaks down when we realize that most organisms go through many stages in life, and therefore greatly complicates things. This is where linear algebra becomes useful.
+
+\paragraph{}
+We notice that the number of organisms in cohort \textit{i}, at time \textit{t+1} equals the probability of a female age \textit{i-1} surviving to join the next cohort, times the female count of age \textit{i-1}, at time \textit{t}. That is,
+
+\begin{equation}
+n_i(t+1)=p_{i-1}n_{i-1}(t)
+\end{equation}
+
+However, we also see that this is impossible when \textit{i} is 1, since there is no cohort below it. For this,
+
+\begin{equation}
+n_1(t+1)=\displaystyle\sum_{k=1}^{w} f_kn_k(t)
+\end{equation}
+
+Or, the number of offspring produced by all females, times their respective probabilities of an offspring surviving to age 1.
+
+\paragraph{}
+It is useful to be able to look at the population counts of all cohorts at the same time. To do this, we create a vector \textbf{n}(t), where
+
+\begin{equation*}
+\mathbf{n}(t)= \begin{bmatrix}
+n_1(t)\\\vdots\\n_w(t)
+\end{bmatrix}
+\end{equation*}
+
+This is called a \textit{population vector}.
+
+\subsection{Leslie Matrices}
+The \textit{Leslie Matrix} (a.k.a. \textit{Projection Matrix}) is named after Patrick Holt Leslie, and is very useful in predicting population growths. It certain data from the population and puts it into a square, $ w\times w $ matrix, where the top row is the fertility rate from 1 to w, the subdiagonal (entries directly below the diagonal) is $ p_1\cdots p_{w-1}$, and all other entries are 0. That is,
+
+\begin{equation*}
+\mathbf{L}= \begin{bmatrix}
+f_1 & f_2 & f_3 & \cdots & f_{w-1} & f_w \\
+p_0 & 0 & 0 & \cdots & 0 & 0 \\
+0 & p_1 & 0 & \cdots & 0 & 0 \\
+0 & 0 & p_2 & \cdots & 0 & 0 \\
+\vdots & \vdots & \vdots & \ddots & \vdots & \vdots \\
+0 & 0 & 0 & \cdots & p_{w-2} & 0
+\end{bmatrix}
+\end{equation*}
+
+At first glance, we may not see anything significant about this matrix. However, we see something very interseting when we multiply this by \textbf{n}(t).
+
+\begin{equation*}
+\mathbf{Ln}(t)= \begin{bmatrix}
+
+f_1n_1(t) & + & f_2n_2(t) & + & f_3n_3(t) & + & \cdots & + & f_wn_w(t) \\
+p_1n_1(t) & + & 0 & + & 0 & + & \cdots & + & 0 \\
+0 & + & p_2n_2(t) & + & 0 & + & \cdots & + & 0 \\
+&&&&& \vdots \\
+0 & + & \cdots & + & 0 & + & p{w-1}n{w-1}(t) & + & 0
+\end{bmatrix}
+\\
+\end{equation*}
+
+\begin{equation*}
+= \begin{bmatrix}
+f_1n_1(t) + \cdots + f_wn_w(t) \\
+p_1n_1(t) \\
+\vdots \\
+p_{w-1}n_{w-1}(t)
+\end{bmatrix}
+\end{equation*}
+
+Then, from equations (1) and (2), we get
+
+\begin{equation*}
+\mathbf{Ln}(t)= \begin{bmatrix}
+n_1(t+1) \\
+\vdots \\
+n_w(t+1)
+\end{bmatrix}
+=\mathbf{n}(t+1)
+\end{equation*}
+
+So, by simply multiplying the population vector by \textbf{L}, we can see the expected population vector for the next year. Repeating this process, we get
+
+\begin{equation*}
+\mathbf{n}(t+x)=L^x\textbf{n}(t)
+\end{equation*}
+
+\subsection{The Euler-Lotka Equation}
+Assume that our population is showing a trend of \textit{stable growth}, that is, $ \mathbf{n}(t+1)=\lambda \mathbf{n}(t) $, where \textit{\lambda} is a scalar. That implies that $ \mathbf{Ln}(t)=\lambda \mathbf{n}(t) $, which means that $ \lambda $ must be an eigenvalue of \textbf{L}. But then we also see that
+
+\begin{equation*}
+\lambda n_{i}(t)=n_i(t+1)=p_{i-1}n_{i-1}(t)
+\end{equation*}
+\begin{equation*}
+n_{i}(t)= \dfrac{p_{i-1}}{\lambda}n_{i-1}(t)
+\end{equation*}
+
+We can continue this process recursively, with $ n_{i-1}(t) $, then $ n_{i-2}(t) $, etc., and eventually we get
+
+\begin{equation}
+n_i(t)= \frac{p_1 \cdots p_{i}}{y^i}n_1(t)
+\end{equation}
+
+Looking at the first entry of \textbf{n}(t+1), we get
+
+\begin{equation*}
+n_1(t+1)=f_1n_1(t)+ \cdots + f_wn_w(t) = \lambda n_1(t)
+\end{equation*}
+
+We now plug in equation (3)
+
+\begin{equation*}
+\lambda n_1(t) = (f_1 + f_2 \frac{p_1}{\lambda} + \cdots + f_w \frac{p_1 \cdots p_w}{\lambda ^{w-1}}) n_1(t)
+\end{equation*}
+
+And divide by the left hand side
+
+\begin{equation*}
+1 = f_1 \frac{1}{\lambda} + \cdots + f_w \frac{p_1 \cdots p_{w-1}}{\lambda ^{w
+}}
+\end{equation*}
+
+We see that $ f_i = p_im_{i+1}$, therefore we can plug this in as well to get
+
+\begin{equation}
+1 = \frac{p_1m_2}{\lambda} + \cdots + \frac{p_1 \cdots p_{w}m_{w+1}}{y^w}
+\end{equation} 
+
+Also, $ p_i= \dfrac{l_{i+1}}{l_i} $, which implies
+
+\begin{equation*}
+s_1 \cdots s_i = \frac{l_2}{l_1} \frac{l_3}{l_2} \cdots \frac{l_i+1}{l_i}
+\end{equation*}
+
+$ l_1 = 1$, everything else cancels except for $ l_{i+1} $, therefore
+
+\begin{equation*}
+s_1 \cdots s_i = l_{i+1}
+\end{equation*}
+
+We then plug this into equation (4)
+
+\begin{equation*}
+1 = \frac{l_1m_1}{\lambda ^ 1} \cdots \frac{l_wm_w}{\lambda ^ w}
+\end{equation*}
+\begin{equation*}
+1 = \displaystyle\sum_{i=1}^{w}\frac{l_im_i}{\lambda ^ i}
+\end{equation*}
+
+This is called the \textit{Euler-Lotka Equation}, named after Leonhard Euler and Alfred J. Lotka. One of many applications this has appears if we set $ \lambda $ to 1. Then we see that $ \mathbf{n}(t+1) = \mathbf{n}(t) $, and the population would be unchanging. Plugging $ \lambda = 1 $ into the Euler-Lotka equation, we get
+
+\begin{equation*}
+1 = \displaystyle\sum_{i=1}^{w} l_im_i
+\end{equation*}
+
+Note how $ l_im_i $ represents the number of females born by a mother age \textit{i} to survive to age \textit{i}. Therefore, the sum of the probabilities for this over all age groups equals 1, therefore, effectively, the chance that the whole population will grow back is 1. This gives us the \textit{replacement rate} of the population.
+
+\section{Conclusion}
+We have seen how using linear algebra, we can predict populations very easily, simply by multiplying the population vector by a Leslie matrix. Using some more advanced linear algebra not discussed here, we can optimize this matrix multiplication so that we can predict these populations even more quickly. We can also use the Euler-Lotka equation in order to work backwards, to see what certain variables would have to be in order for the population to grow in a certain way. There are many more applications of the Euler-Lotka equation which we have not explored. Overall, linear algebra is a very useful tool in Population Biology.
+
+\newpage
+\subsection{Bibliography}
+Lubetkin, Kaitlin. “An Application of Linear Algebra in Population Biology.” Lubetkin-Paper-Revised.pdf, 2 May 2007, buzzard.ups.edu/courses/2007spring/projects/lubetkin-paper-revised.pdf. \\
+Wikipedia contributors. "Euler–Lotka equation." Wikipedia, The Free Encyclopedia. Wikipedia, The Free Encyclopedia, 29 Dec. 2015. Web. 5 Mar. 2018. \\
+Wikipedia contributors. "Total fertility rate." Wikipedia, The Free Encyclopedia. Wikipedia, The Free Encyclopedia, 21 Feb. 2018. Web. 5 Mar. 2018.
+
+\end{document}
